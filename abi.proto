@@ -59,21 +59,23 @@ message CommandRequest {
     Hget hget = 1;
     Hgetall hgetall = 2;
     Hmget hmget = 3;
-  }
-}
-
-// 返回数据
-message Value {
-  oneof value {
-    Hget hget = 1;
-    Hgetall hgetall = 2;
-    Hmget hmget = 3;
     Hset hset = 4;
     Hmset hmset = 5;
     Hdel hdel = 6;
     Hmdel hmdel = 7;
     Hexist hexist = 8;
     Hmexist hmexist = 9;
+  }
+}
+
+// 返回数据
+message Value {
+  oneof value {
+    string string = 1;
+    bytes binary = 2;
+    int64 integer = 3;
+    double float = 4;
+    bool bool = 5;
   }
 }
 
