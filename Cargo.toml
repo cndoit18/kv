@@ -9,7 +9,9 @@ edition = "2021"
 prost-build = "0.12.1"
 
 [dependencies]
+dashmap = "5.5.3"
 prost = "0.12.1"
+thiserror = "1.0.61"
 tracing = "0.1.40"
 
 [dev-dependencies]
