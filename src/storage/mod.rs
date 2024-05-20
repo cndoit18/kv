@@ -1,6 +1,6 @@
 mod memory;
-pub use memory::MemTable;
 use crate::{KvError, Kvpair, Value};
+pub use memory::MemTable;
 
 /// 对存储的抽象，我们不关心数据存在哪儿，但需要定义外界如何和存储打交道
 pub trait Storage {
