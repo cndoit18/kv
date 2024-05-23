@@ -21,6 +21,27 @@ impl MemTable {
     }
 }
 
+pub struct StorageIter<T> {
+    data: T,
+}
+
+impl<T> StorageIter<T> {
+    pub fn new(data: T) -> Self {
+        Self { data }
+    }
+}
+
+impl<T> Iterator for StorageIter<T>
+where
+    T: Iterator,
+    T::Item: Into<Kvpair>,
+{
+    type Item = Kvpair;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.data.next().map(|v| v.into())
+    }
+}
+
 impl Storage for MemTable {
     fn get(&self, table: &str, key: &str) -> Result<Option<Value>, KvError> {
         let table = self.get_or_create_table(table);
@@ -50,8 +71,10 @@ impl Storage for MemTable {
             .collect())
     }
 
-    fn get_iter(&self, _table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
-        todo!()
+    fn get_iter(&self, table: &str) -> Result<Box<dyn Iterator<Item = Kvpair>>, KvError> {
+        let table = self.get_or_create_table(table).clone();
+        let iter = StorageIter::new(table.into_iter());
+        Ok(Box::new(iter))
     }
 }
 
@@ -69,6 +92,12 @@ mod tests {
     fn memtable_get_all_should_work() {
         let store = MemTable::new();
         test_get_all(store);
+    }
+
+    #[test]
+    fn memtable_iter_should_work() {
+        let store = MemTable::new();
+        test_get_iter(store);
     }
 
     fn test_basi_interface(store: impl Storage) {

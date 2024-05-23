@@ -93,10 +93,7 @@ pub struct Hmexist {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CommandRequest {
-    #[prost(
-        oneof = "command_request::RequestData",
-        tags = "1, 2, 3, 4, 5, 6, 7, 8, 9"
-    )]
+    #[prost(oneof = "command_request::RequestData", tags = "1, 2, 3, 4, 5, 6, 7, 8, 9")]
     pub request_data: ::core::option::Option<command_request::RequestData>,
 }
 /// Nested message and enum types in `CommandRequest`.
