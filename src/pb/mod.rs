@@ -2,6 +2,7 @@ pub mod abi;
 use crate::*;
 use abi::{command_request::RequestData, *};
 use http::status::StatusCode;
+use std::str::from_utf8;
 
 impl CommandRequest {
     /// 创建 HGET 命令
@@ -55,6 +56,14 @@ impl From<&str> for Value {
     fn from(s: &str) -> Self {
         Self {
             value: Some(value::Value::String(s.into())),
+        }
+    }
+}
+
+impl From<&[u8]> for Value {
+    fn from(s: &[u8]) -> Self {
+        Self {
+            value: Some(value::Value::String(from_utf8(s).unwrap().to_string())),
         }
     }
 }

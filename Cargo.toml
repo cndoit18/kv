@@ -12,10 +12,12 @@ prost-build = "0.12.1"
 dashmap = "5.5.3"
 http = "1.1.0"
 prost = "0.12.1"
+sled = "0.34.7"
 thiserror = "1.0.61"
 tracing = "0.1.40"
 
 [dev-dependencies]
+tempfile = "3.10.1"
 anyhow = "1.0.86"
 # used to support higher versions of prost
 async-prost = { git = "https://github.com/zhaopinglu/async-prost.git" }

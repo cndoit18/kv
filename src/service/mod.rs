@@ -10,12 +10,34 @@ pub trait CommandService {
     fn execute(self, store: &impl Storage) -> CommandResponse;
 }
 
+pub trait Notify<Arg> {
+    fn notify(&self, arg: &Arg);
+}
+
+pub trait NotifyMut<Arg> {
+    fn notify(&self, arg: &mut Arg);
+}
+
+impl<Arg> Notify<Arg> for Vec<fn(&Arg)> {
+    #[inline]
+    fn notify(&self, arg: &Arg) {
+        self.iter().for_each(|f| f(arg))
+    }
+}
+
+impl<Arg> NotifyMut<Arg> for Vec<fn(&mut Arg)> {
+    #[inline]
+    fn notify(&self, arg: &mut Arg) {
+        self.iter().for_each(|f| f(arg))
+    }
+}
+
 /// Service 数据结构
 pub struct Service<Store = MemTable> {
     inner: Arc<ServiceInner<Store>>,
 }
 
-impl<Store> Clone for Service<Store> {
+impl<Store: Storage> Clone for Service<Store> {
     fn clone(&self) -> Self {
         Self {
             inner: Arc::clone(&self.inner),
@@ -31,6 +53,7 @@ pub struct ServiceInner<Store> {
     on_before_send: Vec<fn(&mut CommandResponse)>,
     on_after_send: Vec<fn()>,
 }
+
 impl<Store: Storage> ServiceInner<Store> {
     pub fn new(store: Store) -> Self {
         Self {
@@ -74,11 +97,14 @@ impl<Store: Storage> From<ServiceInner<Store>> for Service<Store> {
 impl<Store: Storage> Service<Store> {
     pub fn execute(&self, cmd: CommandRequest) -> CommandResponse {
         debug!("Got request: {:?}", cmd);
-        // TODO: 发送 on_received 事件
-        let res = dispatch(cmd, &self.inner.store);
+        self.inner.on_received.notify(&cmd);
+        let mut res = dispatch(cmd, &self.inner.store);
         debug!("Executed response: {:?}", res);
-        // TODO: 发送 on_executed 事件
-
+        self.inner.on_executed.notify(&mut res);
+        self.inner.on_before_send.notify(&mut res);
+        if !self.inner.on_before_send.is_empty() {
+            debug!("Modified response {:?}", res);
+        }
         res
     }
 }
