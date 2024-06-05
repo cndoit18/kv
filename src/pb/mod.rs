@@ -1,6 +1,7 @@
 pub mod abi;
 use crate::*;
 use abi::{command_request::RequestData, *};
+use bytes::Bytes;
 use http::status::StatusCode;
 use std::str::from_utf8;
 
@@ -9,6 +10,14 @@ impl CommandRequest {
     pub fn new_hget(table: impl Into<String>, key: impl Into<String>) -> Self {
         Self {
             request_data: Some(RequestData::Hget(Hget {
+                table: table.into(),
+                key: key.into(),
+            })),
+        }
+    }
+    pub fn new_hdel(table: impl Into<String>, key: impl Into<String>) -> Self {
+        Self {
+            request_data: Some(RequestData::Hdel(Hdel {
                 table: table.into(),
                 key: key.into(),
             })),
@@ -76,6 +85,20 @@ impl From<i64> for Value {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for Value {
+    fn from(buf: &[u8; N]) -> Self {
+        Bytes::copy_from_slice(&buf[..]).into()
+    }
+}
+
+impl From<Bytes> for Value {
+    fn from(buf: Bytes) -> Self {
+        Self {
+            value: Some(value::Value::Binary(buf)),
+        }
+    }
+}
+
 /// 从 Value 转换成 CommandResponse
 impl From<Value> for CommandResponse {
     fn from(v: Value) -> Self {
@@ -87,6 +110,15 @@ impl From<Value> for CommandResponse {
     }
 }
 
+impl From<Vec<Value>> for CommandResponse {
+    fn from(v: Vec<Value>) -> Self {
+        Self {
+            status: StatusCode::OK.as_u16() as _,
+            values: v,
+            ..Default::default()
+        }
+    }
+}
 /// 从 Vec<Kvpair> 转换成 CommandResponse
 impl From<Vec<Kvpair>> for CommandResponse {
     fn from(v: Vec<Kvpair>) -> Self {
