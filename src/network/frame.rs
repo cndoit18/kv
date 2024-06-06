@@ -5,6 +5,7 @@ use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use prost::Message;
 use std::io::{Read, Write};
 use tokio::io::{AsyncRead, AsyncReadExt};
+use tracing::debug;
 
 pub const LEN_LEN: usize = 4;
 const MAX_FRAME: usize = 2 * 1024 * 1024 * 1024;
@@ -38,6 +39,8 @@ where
                 .finish()
                 .map_err(|e| KvError::Internal(e.to_string()))?
                 .into_inner();
+            debug!("Encode a frame: size {}({})", size, payload.len());
+
             buf.put_u32((payload.len() | COMPRESSION_BIT) as _);
             buf.unsplit(payload);
             Ok(())
@@ -50,6 +53,8 @@ where
     fn decode_frame(buf: &mut BytesMut) -> Result<Self, KvError> {
         let header = buf.get_u32() as usize;
         let (l, compressed) = decode_header(header);
+        debug!("Got a frame: msg len {}, compressed {}", l, compressed);
+
         if compressed {
             let mut decoder = GzDecoder::new(&buf[..l]);
             let mut tmp = Vec::with_capacity(l * 2);
@@ -167,6 +172,7 @@ mod tests {
             std::task::Poll::Ready(Ok(()))
         }
     }
+
     #[tokio::test]
     async fn read_frame_should_work() {
         let mut buf = BytesMut::new();
